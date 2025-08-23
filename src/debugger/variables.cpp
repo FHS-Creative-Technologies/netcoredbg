@@ -259,6 +259,7 @@ HRESULT Variables::GetStackVariables(
         IfFailRet(getValue(&iCorValue, var.evalFlags));
         IfFailRet(TypePrinter::GetTypeOfValue(iCorValue, var.type));
         IfFailRet(PrintValue(iCorValue, var.value));
+        IfFailRet(iCorValue->GetAddress(&var.address));
 
         IfFailRet(AddVariableReference(var, frameId, iCorValue, ValueIsVariable));
         variables.push_back(var);
@@ -355,6 +356,7 @@ HRESULT Variables::GetChildren(
         if (var.name.find('(') == std::string::npos) // expression evaluator does not support typecasts
             var.evaluateName = ref.evaluateName + (isIndex ? "" : ".") + var.name;
         IfFailRet(FillValueAndType(it, var));
+        IfFailRet(it.value->GetAddress(&var.address));
         IfFailRet(AddVariableReference(var, ref.frameId, it.value, ValueIsVariable));
         variables.push_back(var);
     }
