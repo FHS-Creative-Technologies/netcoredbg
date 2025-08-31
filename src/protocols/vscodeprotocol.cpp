@@ -108,15 +108,15 @@ void to_json(json &j, const Scope &s) {
 }
 
 void to_json(json &j, const Variable &v) {
-    char address[19] = "0x0000000000000000";
-    snprintf(address, 19, "0x%016llx", v.address);
+    char memoryReference[19] = "0x0000000000000000";
+    snprintf(memoryReference, 19, "0x%016llx", v.memoryReference);
 
     j = json{
         {"name",               v.name},
         {"value",              v.value},
         {"type",               v.type},
         {"evaluateName",       v.evaluateName},
-        {"memoryReference",    address},
+        {"memoryReference",    memoryReference},
         {"variablesReference", v.variablesReference}};
 
     if (v.variablesReference > 0)

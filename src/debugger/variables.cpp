@@ -24,6 +24,21 @@
 namespace netcoredbg
 {
 
+HRESULT GetMemoryReference(ICorDebugValue* pInputValue, uint64_t& memoryReference) {
+    HRESULT Status;
+
+    IfFailRet(pInputValue->GetAddress(&memoryReference));
+
+    ToRelease<ICorDebugReferenceValue> pReferenceValue;
+    if (FAILED(pInputValue->QueryInterface(IID_ICorDebugReferenceValue, (void**)&pReferenceValue))) {
+        return S_OK;
+    }
+
+    IfFailRet(pReferenceValue->GetValue(&memoryReference));
+
+    return S_OK;
+}
+
 static void GetNumChild(Evaluator *pEvaluator, ICorDebugValue *pValue, int &numChild, bool static_members)
 {
     numChild = 0;
@@ -219,6 +234,7 @@ HRESULT Variables::GetExceptionVariable(FrameId frameId, ICorDebugThread *pThrea
         HRESULT Status;
         IfFailRet(PrintValue(pExceptionValue, var.value));
         IfFailRet(TypePrinter::GetTypeOfValue(pExceptionValue, var.type));
+        IfFailRet(GetMemoryReference(pExceptionValue, var.memoryReference));
 
         return AddVariableReference(var, frameId, pExceptionValue, ValueIsVariable);
     }
@@ -259,7 +275,7 @@ HRESULT Variables::GetStackVariables(
         IfFailRet(getValue(&iCorValue, var.evalFlags));
         IfFailRet(TypePrinter::GetTypeOfValue(iCorValue, var.type));
         IfFailRet(PrintValue(iCorValue, var.value));
-        IfFailRet(iCorValue->GetAddress(&var.address));
+        IfFailRet(GetMemoryReference(iCorValue, var.memoryReference));
 
         IfFailRet(AddVariableReference(var, frameId, iCorValue, ValueIsVariable));
         variables.push_back(var);
@@ -356,7 +372,7 @@ HRESULT Variables::GetChildren(
         if (var.name.find('(') == std::string::npos) // expression evaluator does not support typecasts
             var.evaluateName = ref.evaluateName + (isIndex ? "" : ".") + var.name;
         IfFailRet(FillValueAndType(it, var));
-        IfFailRet(it.value->GetAddress(&var.address));
+        IfFailRet(GetMemoryReference(it.value, var.memoryReference));
         IfFailRet(AddVariableReference(var, ref.frameId, it.value, ValueIsVariable));
         variables.push_back(var);
     }
@@ -407,6 +423,7 @@ HRESULT Variables::Evaluate(
     variable.evaluateName = expression;
     IfFailRet(TypePrinter::GetTypeOfValue(pResultValue, variable.type));
     IfFailRet(PrintValue(pResultValue, variable.value));
+    IfFailRet(GetMemoryReference(pResultValue, variable.memoryReference));
 
     return AddVariableReference(variable, frameId, pResultValue, ValueIsVariable);
 }
