@@ -24,7 +24,7 @@
 namespace netcoredbg
 {
 
-HRESULT GetMemoryReference(ICorDebugValue* pInputValue, uint64_t& memoryReference) {
+static HRESULT GetMemoryReference(ICorDebugValue* pInputValue, uint64_t& memoryReference) {
     HRESULT Status;
 
     IfFailRet(pInputValue->GetAddress(&memoryReference));
